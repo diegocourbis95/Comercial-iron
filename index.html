@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Importadora Motos — CRM</title>
+<title>AIron CRM — Inbox & Pipeline</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
@@ -264,13 +264,13 @@
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo">
-      <div class="logo-mark"><span>MOTO</span>S</div>
-      <div class="logo-sub">CRM — Importadora</div>
+      <div class="logo-mark"><span>AI</span>RON</div>
+      <div class="logo-sub">CRM — Inbox & Pipeline</div>
     </div>
     <p class="login-title">Iniciar Sesión</p>
     <div class="form-group">
       <label>Usuario</label>
-      <input type="text" id="login-user" placeholder="usuario@importadora.cl" value="admin@importadora.cl">
+      <input type="text" id="login-user" placeholder="usuario@importadora.cl" value="admin@comercialiron.cl">
     </div>
     <div class="form-group">
       <label>Contraseña</label>
@@ -284,7 +284,7 @@
       </select>
     </div>
     <button class="btn-login" onclick="doLogin()">INGRESAR →</button>
-    <p class="login-hint">Demo: admin@importadora.cl / admin123</p>
+    <p class="login-hint">Demo: admin@comercialiron.cl / admin123</p>
   </div>
 </div>
 
@@ -292,7 +292,7 @@
 <div id="app">
   <aside class="sidebar">
     <div class="sidebar-logo">
-      <div class="logo-mark"><span>MOTO</span>S</div>
+      <div class="logo-mark"><span>AI</span>RON</div>
       <div class="logo-sub">CRM</div>
     </div>
     <div class="sidebar-user">
@@ -466,7 +466,7 @@
       <div class="ai-status-dot"></div>
       <div>
         <div class="ai-chat-title">ASISTENTE IA</div>
-        <div class="ai-chat-sub">Importadora Motos CRM</div>
+        <div class="ai-chat-sub">CRM · Inbox & Pipeline</div>
       </div>
     </div>
     <div class="ai-messages" id="ai-messages">
@@ -555,7 +555,7 @@ async function loadConversaciones() {
   try {
     const { data, error } = await db
       .from('conversaciones')
-      .select(`*, leads(nombre, telefono, marca_interes, score, region, sueldo, trabajo_formal, monto_pie)`)
+      .select("*, leads(nombre, telefono, marca_interes, score, region, sueldo, trabajo_formal, monto_pie)")
       .order('updated_at', { ascending: false })
       .limit(50);
 
