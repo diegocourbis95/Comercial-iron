@@ -631,7 +631,7 @@ function startPolling() {
   pollingInterval = setInterval(() => {
     loadConversaciones();
     if (activeConv) refreshActiveChat();
-  }, 10000);
+  }, 5000);
 }
 
 function stopPolling() {
