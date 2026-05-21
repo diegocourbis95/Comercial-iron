@@ -640,7 +640,7 @@ async function loadMensajes(telefono) {
 }
 
 // ══════════════════════════════════════════
-// POLLING (refresh cada 10 segundos)
+// POLLING (refresh cada 5 segundos)
 // ══════════════════════════════════════════
 let pollingInterval = null;
 
@@ -658,7 +658,21 @@ function stopPolling() {
 async function refreshActiveChat() {
   if (!activeConv) return;
   const msgs = await loadMensajes(activeConv.telefono);
-  renderMessages(msgs);
+  const container = document.getElementById('chat-messages');
+  const currentCount = container.querySelectorAll('.msg-group').length;
+  if (msgs.length <= currentCount) return;
+  const isAtBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 60;
+  msgs.slice(currentCount).forEach(m => {
+    const isUser = m.rol === 'usuario' || m.rol === 'user';
+    const type = isUser ? 'received' : 'sent';
+    const sender = isUser ? 'Cliente' : '🤖 Valentina';
+    const time = m.created_at ? new Date(m.created_at).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}) : '';
+    const group = document.createElement('div');
+    group.className = 'msg-group ' + type;
+    group.innerHTML = `<div class="msg-sender">${sender}</div><div class="msg-bubble">${m.contenido || ''}</div><div class="msg-time">${time}</div>`;
+    container.appendChild(group);
+  });
+  if (isAtBottom) container.scrollTop = container.scrollHeight;
 }
 
 // ══════════════════════════════════════════
@@ -670,13 +684,13 @@ function renderConvList(list) {
     container.innerHTML = '<div class="loading-state">Sin conversaciones</div>';
     return;
   }
+  const scrollTop = container.scrollTop;
   container.innerHTML = list.map(c => {
     const nombre = c.leads?.nombre || c.telefono || 'Desconocido';
     const telefono = c.telefono || '';
-    const initials = nombre.substring(0,2).toUpperCase();
     const time = c.updated_at ? new Date(c.updated_at).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}) : '';
     const preview = c.ultimo_mensaje || 'Sin mensajes';
-    const isActive = activeConv && activeConv.id === c.id;
+    const isActive = activeConv && String(activeConv.id) === String(c.id);
     return `
       <div class="conv-item ${isActive ? 'active' : ''}" onclick="openConv('${c.id}')">
         <div class="conv-top">
@@ -691,6 +705,7 @@ function renderConvList(list) {
       </div>
     `;
   }).join('');
+  container.scrollTop = scrollTop;
 }
 
 async function openConv(id) {
