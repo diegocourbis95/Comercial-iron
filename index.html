@@ -283,22 +283,15 @@
     </div>
     <p class="login-title">Iniciar Sesión</p>
     <div class="form-group">
-      <label>Usuario</label>
-      <input type="text" id="login-user" placeholder="usuario@comercialiron.cl" value="admin@comercialiron.cl">
+      <label>Email</label>
+      <input type="email" id="login-user" placeholder="usuario@comercialiron.cl" onkeypress="if(event.key==='Enter') doLogin()">
     </div>
     <div class="form-group">
       <label>Contraseña</label>
-      <input type="password" id="login-pass" placeholder="••••••••" value="admin123">
+      <input type="password" id="login-pass" placeholder="••••••••" onkeypress="if(event.key==='Enter') doLogin()">
     </div>
-    <div class="form-group">
-      <label>Perfil</label>
-      <select id="login-role">
-        <option value="admin">Administrador</option>
-        <option value="ventas">Ejecutivo de Ventas</option>
-      </select>
-    </div>
-    <button class="btn-login" onclick="doLogin()">INGRESAR →</button>
-    <p class="login-hint">Demo: admin@comercialiron.cl / admin123</p>
+    <button class="btn-login" id="btn-login" onclick="doLogin()">INGRESAR →</button>
+    <p id="login-error" style="color:var(--red-light);font-size:12px;text-align:center;margin-top:14px;display:none;"></p>
   </div>
 </div>
 
@@ -525,18 +518,40 @@ const stageColors = ['#777','#3B82F6','#F97316','#EAB308','#22C55E'];
 // ══════════════════════════════════════════
 // LOGIN
 // ══════════════════════════════════════════
-function doLogin() {
-  const user = document.getElementById('login-user').value;
-  if (!user) return alert('Ingresa un usuario');
+async function doLogin() {
+  const email = document.getElementById('login-user').value.trim();
+  const password = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  const btn = document.getElementById('btn-login');
+  errEl.style.display = 'none';
+  if (!email || !password) {
+    errEl.textContent = 'Ingresa tu email y contraseña.';
+    errEl.style.display = 'block';
+    return;
+  }
+  btn.textContent = 'Ingresando...';
+  btn.disabled = true;
+  const { data, error } = await db.auth.signInWithPassword({ email, password });
+  btn.textContent = 'INGRESAR →';
+  btn.disabled = false;
+  if (error) {
+    errEl.textContent = error.message === 'Invalid login credentials' ? 'Credenciales incorrectas.' : error.message;
+    errEl.style.display = 'block';
+    return;
+  }
+  _showApp(data.user.email);
+}
+
+function _showApp(email) {
   const screen = document.getElementById('login-screen');
   const app = document.getElementById('app');
   screen.style.opacity = '0';
   setTimeout(() => {
     screen.style.display = 'none';
     app.classList.add('active');
-    const initials = user.substring(0,2).toUpperCase();
+    const initials = email.substring(0,2).toUpperCase();
     document.getElementById('user-avatar').textContent = initials;
-    document.getElementById('user-name-display').textContent = user.split('@')[0];
+    document.getElementById('user-name-display').textContent = email.split('@')[0];
     document.getElementById('pipeline-date').textContent = 'Actualizado ' + new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long'});
     loadConversaciones();
     loadLeads();
@@ -544,10 +559,12 @@ function doLogin() {
   }, 500);
 }
 
-function doLogout() {
+async function doLogout() {
+  await db.auth.signOut();
   const screen = document.getElementById('login-screen');
   const app = document.getElementById('app');
-  screen.style.opacity = '0'; screen.style.display = 'flex';
+  screen.style.opacity = '0';
+  screen.style.display = 'flex';
   app.classList.remove('active');
   setTimeout(() => screen.style.opacity = '1', 10);
   stopPolling();
@@ -1002,6 +1019,23 @@ function updateTakeoverUI(isHumano) {
 // ══════════════════════════════════════════
 document.querySelectorAll('.modal-overlay').forEach(m => {
   m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// Restore session si ya estaba logueado
+(async () => {
+  const { data: { session } } = await db.auth.getSession();
+  if (session) _showApp(session.user.email);
+})();
+
+// Detectar cierre de sesión externo
+db.auth.onAuthStateChange((event) => {
+  if (event === 'SIGNED_OUT') {
+    document.getElementById('app').classList.remove('active');
+    const screen = document.getElementById('login-screen');
+    screen.style.display = 'flex';
+    setTimeout(() => { screen.style.opacity = '1'; }, 10);
+    stopPolling();
+  }
 });
 </script>
 </body>
